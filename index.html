@@ -1,52 +1,70 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Visor de cristalografia - Semana 1</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Visor de estructuras cristalinas — Física del Estado Sólido</title>
 <style>
-body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f7f9fc;color:#1e293b}header{background:#123b5d;color:white;padding:18px 24px}main{display:grid;grid-template-columns:1.3fr .9fr;gap:18px;padding:18px}.panel{background:white;border-radius:14px;box-shadow:0 4px 16px #0001;padding:16px}canvas{width:100%;height:560px;background:#fbfdff;border:1px solid #dbe4ef;border-radius:12px}.controls{display:grid;grid-template-columns:1fr 1fr;gap:10px}.controls label{font-size:14px}.controls input,.controls select{width:100%}.pill{display:inline-block;background:#e7f0fa;color:#123b5d;padding:4px 8px;border-radius:999px;margin:3px;font-size:12px}.question{background:#fff8e1;border-left:5px solid #f59e0b;padding:10px;border-radius:8px}.small{font-size:13px;color:#475569}table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #dbe4ef;padding:6px;text-align:left}@media(max-width:900px){main{grid-template-columns:1fr}canvas{height:430px}}
+:root{--bg:#f6f7f9;--panel:#ffffff;--ink:#15181c;--muted:#5e6772;--line:#c7ccd3;--accent:#263b66;}
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{padding:18px 22px;background:var(--panel);border-bottom:1px solid var(--line)} h1{font-size:20px;margin:0 0 5px} header p{margin:0;color:var(--muted)}
+main{display:grid;grid-template-columns:minmax(500px,1.55fr) minmax(300px,.85fr);gap:16px;padding:16px;max-width:1250px;margin:auto}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:0 2px 10px rgba(0,0,0,.03)}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px} label{font-size:14px} select,input[type=range],button{font:inherit} select,button{padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:white} button{cursor:pointer}
+canvas{width:100%;height:600px;border:1px solid var(--line);border-radius:10px;background:#fff;display:block;touch-action:none}
+.info h2{font-size:18px;margin:0 0 8px}.info p{line-height:1.45}.kv{display:grid;grid-template-columns:145px 1fr;gap:6px 10px;font-size:14px;margin:12px 0}.kv div:nth-child(odd){font-weight:650}.hint{font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:10px}.question{background:#f1f3f7;padding:10px;border-radius:9px;font-size:14px;line-height:1.4;margin-top:10px}
+.legend{display:flex;gap:15px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin-top:9px}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px}.a{background:#2d5c9b}.b{background:#a34e42}
+@media(max-width:850px){main{grid-template-columns:1fr} canvas{height:520px}}
 </style>
 </head>
 <body>
-<header><h1>Visor de cristalografia - Semana 1</h1><p>Red de Bravais + base: explore estructuras simples sin instalar software.</p></header>
+<header><h1>Visor de estructuras cristalinas</h1><p>Semana 1 · Física del Estado Sólido · Red de Bravais + base</p></header>
 <main>
-<section class="panel"><canvas id="cv" width="900" height="620"></canvas></section>
-<section class="panel">
+<section class="card">
 <div class="controls">
-<label>Estructura<select id="structure"><option>SC</option><option>BCC</option><option>FCC</option><option>CsCl</option><option>NaCl</option><option>Diamante</option><option>Zincblenda</option></select></label>
-<label>Zoom<input type="range" id="zoom" min="0.55" max="1.8" step="0.05" value="1.05"></label>
-<label>Rotacion X<input type="range" id="rx" min="-75" max="75" step="1" value="25"></label>
-<label>Rotacion Z<input type="range" id="rz" min="-180" max="180" step="1" value="-35"></label>
+<label>Estructura: <select id="structure"></select></label>
+<label>Zoom: <input id="zoom" type="range" min="0.65" max="1.75" step="0.01" value="1.05"></label>
+<label><input id="edges" type="checkbox" checked> celda</label>
+<label><input id="labels" type="checkbox"> coordenadas</label>
+<button id="reset">Restablecer vista</button>
 </div>
-<h2 id="title"></h2><div id="tags"></div><p id="desc"></p>
-<h3>Base usada en el visor</h3><table id="basis"><thead><tr><th>Especie</th><th>Coordenadas fraccionarias</th></tr></thead><tbody></tbody></table>
-<h3>Pregunta conceptual</h3><p class="question" id="question"></p>
-<p class="small">Sugerencia: rote la estructura hasta reconocer vecinos cercanos y compare las especies. La similitud visual no siempre significa la misma red de Bravais.</p>
+<canvas id="cv" width="900" height="650"></canvas>
+<div class="legend"><span><span class="dot a"></span>Especie A</span><span><span class="dot b"></span>Especie B (cuando aplique)</span> · Arrastre para rotar · rueda del ratón para zoom</div>
 </section>
+<aside class="card info"><h2 id="title"></h2><p id="desc"></p><div class="kv" id="kv"></div><div class="question" id="question"></div><p class="hint">Objetivo: no memorice una figura. Identifique qué parte corresponde a la periodicidad (red) y qué parte corresponde al contenido físico de la celda (base).</p></aside>
 </main>
 <script>
-const cv=document.getElementById('cv'), ctx=cv.getContext('2d');
-const data={
-SC:{lat:'cubica simple',basis:[['A',[0,0,0]]],tags:['red Bravais','base monoatomica','coordinacion 6'],desc:'Puntos solo en las esquinas de la celda convencional. Hay 1 punto efectivo por celda.',q:'Calcule por que 8 esquinas aportan 1 punto efectivo por celda.'},
-BCC:{lat:'cubica centrada en el cuerpo',basis:[['A',[0,0,0]],['A',[.5,.5,.5]]],tags:['red Bravais','sitios equivalentes','coordinacion 8'],desc:'El centro y las esquinas son sitios equivalentes: todos tienen el mismo entorno.',q:'Por que el sitio del centro y el de una esquina son equivalentes en BCC?'},
-FCC:{lat:'cubica centrada en las caras',basis:[['A',[0,0,0]],['A',[0,.5,.5]],['A',[.5,0,.5]],['A',[.5,.5,0]]],tags:['red Bravais','empaquetamiento compacto','coordinacion 12'],desc:'Tiene puntos en esquinas y centros de cara; 4 puntos efectivos por celda convencional.',q:'Explique por que la celda convencional FCC contiene 4 puntos efectivos.'},
-CsCl:{lat:'cubica simple + base binaria',basis:[['Cs',[0,0,0]],['Cl',[.5,.5,.5]]],tags:['cristal binario','no BCC si especies distintas','coordinacion 8'],desc:'Se parece a BCC, pero las esquinas y el centro no son equivalentes si son especies diferentes.',q:'Por que CsCl no debe describirse simplemente como BCC?'},
-NaCl:{lat:'FCC + base binaria',basis:[['Cl',[0,0,0]],['Na',[.5,0,0]],['Cl',[0,.5,.5]],['Cl',[.5,0,.5]],['Cl',[.5,.5,0]],['Na',[0,.5,0]],['Na',[0,0,.5]],['Na',[.5,.5,.5]]],tags:['estructura sal gema','coordinacion 6','cristal ionico'],desc:'Puede verse como dos subredes FCC interpenetradas desplazadas media arista.',q:'Identifique cuantos primeros vecinos tiene un ion en NaCl y de que especie son.'},
-Diamante:{lat:'FCC + base de dos atomos iguales',basis:[['C',[0,0,0]],['C',[.25,.25,.25]],['C',[0,.5,.5]],['C',[.25,.75,.75]],['C',[.5,0,.5]],['C',[.75,.25,.75]],['C',[.5,.5,0]],['C',[.75,.75,.25]]],tags:['red FCC','base de dos C','coordinacion 4'],desc:'Red FCC con base de dos atomos iguales desplazados (1/4,1/4,1/4).',q:'Por que el diamante tiene coordinacion 4 aunque se construya desde una red FCC?'},
-Zincblenda:{lat:'FCC + base binaria',basis:[['Zn',[0,0,0]],['S',[.25,.25,.25]],['Zn',[0,.5,.5]],['S',[.25,.75,.75]],['Zn',[.5,0,.5]],['S',[.75,.25,.75]],['Zn',[.5,.5,0]],['S',[.75,.75,.25]]],tags:['red FCC','base binaria','coordinacion 4'],desc:'Misma geometria que diamante, pero con dos especies quimicas.',q:'Que cambia fisicamente al pasar de diamante a zincblenda si la geometria es parecida?'}
+const structures={
+ 'SC':{name:'Cúbica simple (SC)', bravais:'Cúbica simple',basis:'A: (0,0,0)',atoms:'1 punto de red efectivo',coord:'6',desc:'La celda convencional coincide con una celda primitiva. Los puntos de red están en las esquinas.',q:'¿Por qué 8 esquinas producen solo 1 punto de red efectivo?',sites:corners('A')},
+ 'BCC':{name:'Cúbica centrada en el cuerpo (BCC)',bravais:'Cúbica centrada en el cuerpo',basis:'A: (0,0,0) sobre la red BCC',atoms:'2 puntos de red efectivos',coord:'8',desc:'Además de las esquinas, hay un punto de red equivalente en el centro del cuerpo.',q:'Compare el entorno del punto central con el de una esquina. ¿Son equivalentes?',sites:[...corners('A'),{p:[.5,.5,.5],s:'A'}]},
+ 'FCC':{name:'Cúbica centrada en las caras (FCC)',bravais:'Cúbica centrada en las caras',basis:'A: (0,0,0) sobre la red FCC',atoms:'4 puntos de red efectivos',coord:'12',desc:'La celda convencional tiene puntos de red en las esquinas y centros de las seis caras.',q:'¿Cómo obtiene 4 puntos de red efectivos a partir de 8 esquinas y 6 caras?',sites:[...corners('A'),...faces('A')]},
+ 'CsCl':{name:'CsCl',bravais:'Cúbica simple',basis:'A: (0,0,0); B: (1/2,1/2,1/2)',atoms:'1 A + 1 B por celda convencional',coord:'8 (A–B)',desc:'Visualmente se parece a BCC, pero el centro y las esquinas son especies distintas; por eso no son puntos equivalentes de una red BCC.',q:'¿Por qué sería incorrecto decir que CsCl tiene red de Bravais BCC?',sites:[...corners('A'),{p:[.5,.5,.5],s:'B'}]},
+ 'Diamond':{name:'Diamante',bravais:'FCC',basis:'C: (0,0,0) y C: (1/4,1/4,1/4)',atoms:'8 C por celda convencional',coord:'4',desc:'Estructura covalente tetraédrica. Puede construirse como una red FCC con una base de dos átomos.',q:'¿Qué diferencia conceptual hay entre “red FCC” y “estructura diamante”?',sites:diamondSites(false)},
+ 'ZB':{name:'Zincblenda (AB)',bravais:'FCC',basis:'A: (0,0,0); B: (1/4,1/4,1/4)',atoms:'4 A + 4 B por celda convencional',coord:'4 (A–B)',desc:'Tiene la misma geometría básica del diamante, pero las dos subredes corresponden a especies diferentes.',q:'¿Qué cambia al pasar de diamante a zincblenda si la geometría es parecida?',sites:diamondSites(true)}
 };
-function color(s){return {A:'#2563eb',C:'#111827',Cs:'#f97316',Cl:'#22c55e',Na:'#8b5cf6',Zn:'#0ea5e9',S:'#eab308'}[s]||'#64748b'}
-function rot(p,rx,rz){let [x,y,z]=p; x-=.5;y-=.5;z-=.5; let ax=rx*Math.PI/180, az=rz*Math.PI/180; let y1=y*Math.cos(ax)-z*Math.sin(ax), z1=y*Math.sin(ax)+z*Math.cos(ax); let x2=x*Math.cos(az)-y1*Math.sin(az), y2=x*Math.sin(az)+y1*Math.cos(az); return [x2,y2,z1];}
-function project(p){let z=p[2]+1.8, s=260*parseFloat(zoom.value)/z; return [cv.width/2+p[0]*s*3.0, cv.height/2+p[1]*s*3.0, s];}
-function draw(){ctx.clearRect(0,0,cv.width,cv.height);let st=structure.value,D=data[st],RX=+rx.value,RZ=+rz.value;title.textContent=st+' — '+D.lat;desc.textContent=D.desc;tags.innerHTML=D.tags.map(t=>`<span class="pill">${t}</span>`).join('');question.textContent=D.q;basis.querySelector('tbody').innerHTML=D.basis.map(b=>`<tr><td>${b[0]}</td><td>(${b[1].map(v=>v.toFixed(2).replace('0.','.') ).join(', ')})</td></tr>`).join('');
-// draw cube edges
-let corners=[[0,0,0],[1,0,0],[1,1,0],[0,1,0],[0,0,1],[1,0,1],[1,1,1],[0,1,1]], edges=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
-ctx.lineWidth=2;ctx.strokeStyle='#94a3b8'; edges.forEach(e=>{let a=project(rot(corners[e[0]],RX,RZ)),b=project(rot(corners[e[1]],RX,RZ));ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();});
-let atoms=D.basis.map(b=>({sp:b[0],p:rot(b[1],RX,RZ)})).sort((a,b)=>a.p[2]-b.p[2]); atoms.forEach(at=>{let [x,y,s]=project(at.p);let r=Math.max(10,18*parseFloat(zoom.value)/(at.p[2]+1.9));ctx.beginPath();ctx.arc(x,y,r,0,2*Math.PI);ctx.fillStyle=color(at.sp);ctx.fill();ctx.strokeStyle='white';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='white';ctx.font='bold 13px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(at.sp,x,y);});
-ctx.fillStyle='#334155';ctx.font='16px Arial';ctx.fillText('Celda convencional (proyeccion 3D)',18,28);
+function corners(s){let a=[];for(let x of [0,1])for(let y of [0,1])for(let z of [0,1])a.push({p:[x,y,z],s});return a}
+function faces(s){return [[.5,.5,0],[.5,.5,1],[.5,0,.5],[.5,1,.5],[0,.5,.5],[1,.5,.5]].map(p=>({p,s}))}
+function fccTranslations(){return [[0,0,0],[0,.5,.5],[.5,0,.5],[.5,.5,0]]}
+function diamondSites(binary){let out=[];let T=fccTranslations();for(let t of T){out.push({p:t,s:'A'});let q=t.map(v=>v+.25);if(q.every(v=>v<=1))out.push({p:q,s:binary?'B':'A'});} // include periodic images within conventional cell
+ // add basis images generated by translations with -0.5 shifts to cover cell boundaries
+ const shifts=[-1,0,1];
+ for(let tx of shifts)for(let ty of shifts)for(let tz of shifts){for(let t of T){let p=[t[0]+tx+.25,t[1]+ty+.25,t[2]+tz+.25];if(p.every(v=>v>=0&&v<=1))out.push({p,s:binary?'B':'A'});}}
+ // de-duplicate
+ let m=new Map();for(let a of out){let k=a.p.map(v=>v.toFixed(3)).join(',')+a.s;m.set(k,a)}return [...m.values()]
 }
-['structure','zoom','rx','rz'].forEach(id=>document.getElementById(id).addEventListener('input',draw));
-draw();
+const sel=document.getElementById('structure');Object.entries(structures).forEach(([k,v])=>{let o=document.createElement('option');o.value=k;o.textContent=v.name;sel.appendChild(o)});sel.value='BCC';
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d'),zoom=document.getElementById('zoom'),edges=document.getElementById('edges'),labels=document.getElementById('labels');
+let yaw=-0.65,pitch=0.45,drag=false,last=[0,0];
+function rot(p){let [x,y,z]=p.map(v=>v-.5);let cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);let x1=cy*x+sy*z,z1=-sy*x+cy*z;let y1=cp*y-sp*z1,z2=sp*y+cp*z1;return [x1,y1,z2]}
+function proj(p){let r=rot(p),f=Number(zoom.value),d=3.5,scale=Math.min(cv.width,cv.height)*.72*f;let k=d/(d-r[2]);return [cv.width/2+r[0]*scale*k,cv.height/2-r[1]*scale*k,r[2]]}
+const E=[[0,1],[1,3],[3,2],[2,0],[4,5],[5,7],[7,6],[6,4],[0,4],[1,5],[2,6],[3,7]];const V=[[0,0,0],[1,0,0],[0,1,0],[1,1,0],[0,0,1],[1,0,1],[0,1,1],[1,1,1]];
+function draw(){ctx.clearRect(0,0,cv.width,cv.height);ctx.fillStyle='#fff';ctx.fillRect(0,0,cv.width,cv.height);if(edges.checked){ctx.strokeStyle='#7d8794';ctx.lineWidth=1.4;for(let [a,b] of E){let A=proj(V[a]),B=proj(V[b]);ctx.beginPath();ctx.moveTo(A[0],A[1]);ctx.lineTo(B[0],B[1]);ctx.stroke()}}
+ let sites=structures[sel.value].sites.map(o=>({...o,pr:proj(o.p)})).sort((a,b)=>a.pr[2]-b.pr[2]);for(let o of sites){let [x,y,z]=o.pr;let rad=10+4*(z+.8);ctx.beginPath();ctx.arc(x,y,rad,0,Math.PI*2);ctx.fillStyle=o.s==='A'?'#2d5c9b':'#a34e42';ctx.fill();ctx.strokeStyle='#17202a';ctx.lineWidth=.7;ctx.stroke();if(labels.checked){ctx.fillStyle='#111';ctx.font='11px system-ui';ctx.fillText('('+o.p.map(v=>fmt(v)).join(', ')+')',x+rad+3,y-3)}}
+ // axes
+ const O=proj([0,0,0]), X=proj([1.18,0,0]),Y=proj([0,1.18,0]),Z=proj([0,0,1.18]); [['a',X],['b',Y],['c',Z]].forEach(([lab,P])=>{ctx.strokeStyle='#222';ctx.beginPath();ctx.moveTo(O[0],O[1]);ctx.lineTo(P[0],P[1]);ctx.stroke();ctx.fillStyle='#222';ctx.font='bold 13px system-ui';ctx.fillText(lab,P[0]+3,P[1]-3)})}
+function fmt(v){if(Math.abs(v-.25)<.001)return '1/4';if(Math.abs(v-.5)<.001)return '1/2';if(Math.abs(v-.75)<.001)return '3/4';return String(Math.round(v*100)/100)}
+function updateInfo(){let s=structures[sel.value];document.getElementById('title').textContent=s.name;document.getElementById('desc').textContent=s.desc;document.getElementById('kv').innerHTML=`<div>Red de Bravais</div><div>${s.bravais}</div><div>Base</div><div>${s.basis}</div><div>Contenido</div><div>${s.atoms}</div><div>Coordinación</div><div>${s.coord}</div>`;document.getElementById('question').innerHTML='<b>Pregunta:</b> '+s.q;draw()}
+cv.addEventListener('pointerdown',e=>{drag=true;last=[e.clientX,e.clientY];cv.setPointerCapture(e.pointerId)});cv.addEventListener('pointermove',e=>{if(!drag)return;let dx=e.clientX-last[0],dy=e.clientY-last[1];yaw+=dx*.009;pitch+=dy*.009;pitch=Math.max(-1.35,Math.min(1.35,pitch));last=[e.clientX,e.clientY];draw()});cv.addEventListener('pointerup',()=>drag=false);cv.addEventListener('wheel',e=>{e.preventDefault();let v=Number(zoom.value)*(e.deltaY>0?.92:1.08);zoom.value=Math.max(.65,Math.min(1.75,v));draw()},{passive:false});
+[sel,zoom,edges,labels].forEach(el=>el.addEventListener('input',updateInfo));document.getElementById('reset').addEventListener('click',()=>{yaw=-.65;pitch=.45;zoom.value=1.05;draw()});updateInfo();
 </script>
 </body></html>
